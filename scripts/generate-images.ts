@@ -39,8 +39,7 @@ async function generateForCharacter(character: {
     logs: false,
   });
 
-  // @ts-expect-error fal result typing
-  const imageUrl: string = result.data.images[0].url;
+  const imageUrl = (result.data as { images: { url: string }[] }).images[0].url;
 
   const localDir = path.join(process.cwd(), "public", "chars", character.id);
   const localPath = path.join(localDir, "portrait.webp");
