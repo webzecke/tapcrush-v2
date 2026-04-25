@@ -8,12 +8,29 @@ type ScriptRole = "ai" | "user" | "blur";
 type ScriptLine = { role: string; text: string };
 type ChatMessage = { id: string; role: "ai" | "user"; text: string };
 
+const FALLBACK_FIRST_AI = "Hey… ich war gerade an dich gedacht 🥺";
+
 function normalizeRole(role: string): ScriptRole | null {
   const r = role.toLowerCase();
   if (r === "ai" || r === "assistant") return "ai";
   if (r === "user") return "user";
   if (r === "blur") return "blur";
   return null;
+}
+
+function parseChatPreview(input: unknown): ScriptLine[] {
+  if (Array.isArray(input)) return input as ScriptLine[];
+
+  if (typeof input === "string") {
+    try {
+      const parsed = JSON.parse(input) as unknown;
+      if (Array.isArray(parsed)) return parsed as ScriptLine[];
+    } catch {
+      // ignore – will fall back below
+    }
+  }
+
+  return [];
 }
 
 function getNextAiIndex(script: ScriptLine[], fromIndex: number) {
@@ -39,15 +56,24 @@ function getOptions(script: ScriptLine[], fromIndex: number) {
 }
 
 export default function ChatClient({ character }: { character: Character }) {
-  const script = useMemo(() => character.chatPreview as ScriptLine[], [character.chatPreview]);
+  useEffect(() => {
+    // Debug helper: verify runtime shape of JSONB from Neon/Drizzle
+    console.log("chatPreview:", character.chatPreview);
+  }, [character.chatPreview]);
+
+  const script = useMemo(() => {
+    const parsed = parseChatPreview(character.chatPreview as unknown);
+    if (parsed.length > 0) return parsed;
+    return [{ role: "ai", text: FALLBACK_FIRST_AI }];
+  }, [character.chatPreview]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
   const [cursor, setCursor] = useState(0);
   const [blurred, setBlurred] = useState(false);
-  const [started, setStarted] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const didStartRef = useRef(false);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -57,11 +83,14 @@ export default function ChatClient({ character }: { character: Character }) {
 
   // Start: first AI message after 800ms (typing first)
   useEffect(() => {
-    if (started) return;
-    setStarted(true);
+    if (didStartRef.current) return;
+    didStartRef.current = true;
 
     const first = getNextAiIndex(script, 0);
-    if (first < 0) return;
+    if (first < 0) {
+      setMessages([{ id: "ai-fallback", role: "ai", text: FALLBACK_FIRST_AI }]);
+      return;
+    }
 
     setTyping(true);
     const t = window.setTimeout(() => {
@@ -79,7 +108,7 @@ export default function ChatClient({ character }: { character: Character }) {
     }, 800);
 
     return () => window.clearTimeout(t);
-  }, [script, started]);
+  }, [script]);
 
   const options = useMemo(() => {
     if (blurred) return [];
