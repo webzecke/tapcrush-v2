@@ -4,7 +4,6 @@ import type { Character } from "@/lib/schema";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type ScriptRole = "ai" | "user" | "blur";
 type ScriptLine = { role: string; text: string };
 type ChatMessage = { id: string; role: "ai" | "user"; text: string };
 
@@ -15,12 +14,33 @@ const FALLBACK_SCRIPT: ScriptLine[] = [
   { role: "blur", text: "🔒 Weitermachen auf Candy AI →" },
 ];
 
-function normalizeRole(role: string): ScriptRole | null {
-  const r = role.toLowerCase();
+function reorderScript(input: ScriptLine[]): ScriptLine[] {
+  const ai: ScriptLine[] = [];
+  const user: ScriptLine[] = [];
+  const blur: ScriptLine[] = [];
+
+  for (const line of input) {
+    const role = normalizeRole(line.role ?? "");
+    if (role === "ai") ai.push({ role: "ai", text: line.text });
+    else if (role === "user") user.push({ role: "user", text: line.text });
+    else blur.push({ role: "blur", text: line.text });
+  }
+
+  const ai0 = ai[0] ?? FALLBACK_SCRIPT[0]!;
+  const users = user.length > 0 ? user.slice(0, 3) : [FALLBACK_SCRIPT[1]!];
+  const ai1 = ai[1] ?? FALLBACK_SCRIPT[2]!;
+  const blurLine =
+    blur[0] ?? ({ role: "blur", text: "🔒 Weitermachen auf Candy AI →" } satisfies ScriptLine);
+
+  return [ai0, ...users, ai1, blurLine];
+}
+
+function normalizeRole(role: string): "ai" | "user" | "blur" {
+  const r = role.toLowerCase().trim();
   if (r === "ai" || r === "assistant") return "ai";
   if (r === "user") return "user";
   if (r === "blur") return "blur";
-  return null;
+  return "ai";
 }
 
 function parseChatPreview(input: unknown): ScriptLine[] {
@@ -68,7 +88,7 @@ export default function ChatClient({ character }: { character: Character }) {
 
   const script = useMemo(() => {
     const parsed = parseChatPreview(character.chatPreview as unknown);
-    if (parsed.length >= 3) return parsed;
+    if (parsed.length > 0) return reorderScript(parsed);
     return FALLBACK_SCRIPT;
   }, [character.chatPreview]);
 
