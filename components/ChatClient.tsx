@@ -8,7 +8,12 @@ type ScriptRole = "ai" | "user" | "blur";
 type ScriptLine = { role: string; text: string };
 type ChatMessage = { id: string; role: "ai" | "user"; text: string };
 
-const FALLBACK_FIRST_AI = "Hey… ich war gerade an dich gedacht 🥺";
+const FALLBACK_SCRIPT: ScriptLine[] = [
+  { role: "ai", text: "Hey… ich war gerade an dich gedacht 🥺" },
+  { role: "user", text: "Erzähl mir mehr über dich" },
+  { role: "ai", text: "Ich bin nicht wie die anderen… aber das merkst du schnell selbst." },
+  { role: "blur", text: "🔒 Weitermachen auf Candy AI →" },
+];
 
 function normalizeRole(role: string): ScriptRole | null {
   const r = role.toLowerCase();
@@ -63,8 +68,8 @@ export default function ChatClient({ character }: { character: Character }) {
 
   const script = useMemo(() => {
     const parsed = parseChatPreview(character.chatPreview as unknown);
-    if (parsed.length > 0) return parsed;
-    return [{ role: "ai", text: FALLBACK_FIRST_AI }];
+    if (parsed.length >= 3) return parsed;
+    return FALLBACK_SCRIPT;
   }, [character.chatPreview]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -87,10 +92,7 @@ export default function ChatClient({ character }: { character: Character }) {
     didStartRef.current = true;
 
     const first = getNextAiIndex(script, 0);
-    if (first < 0) {
-      setMessages([{ id: "ai-fallback", role: "ai", text: FALLBACK_FIRST_AI }]);
-      return;
-    }
+    if (first < 0) return;
 
     setTyping(true);
     const t = window.setTimeout(() => {
@@ -221,11 +223,7 @@ export default function ChatClient({ character }: { character: Character }) {
               </div>
             )}
 
-            {!typing && !blurred && messages.length > 0 && options.length === 0 && (
-              <div className="pt-2 text-center text-xs text-zinc-600">
-                No more options.
-              </div>
-            )}
+            {/* Wenn keine Optionen vorhanden sind, warten wir einfach auf den nächsten Schritt (oder Blur). */}
           </div>
 
           {/* Blur + CTA */}
