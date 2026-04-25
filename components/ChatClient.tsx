@@ -99,12 +99,19 @@ export default function ChatClient({ character }: { character: Character }) {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const didStartRef = useRef(false);
+  const blurTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight });
   }, [messages, typing, blurred]);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimerRef.current) window.clearTimeout(blurTimerRef.current);
+    };
+  }, []);
 
   // Start: first AI message after 800ms (typing first)
   useEffect(() => {
@@ -148,6 +155,11 @@ export default function ChatClient({ character }: { character: Character }) {
     if (!line) return;
     if (normalizeRole(line.role) !== "user") return;
 
+    if (blurTimerRef.current) {
+      window.clearTimeout(blurTimerRef.current);
+      blurTimerRef.current = null;
+    }
+
     setMessages((prev) => [
       ...prev,
       { id: `user-${optionIndex}-${Date.now()}`, role: "user", text: line.text },
@@ -176,6 +188,14 @@ export default function ChatClient({ character }: { character: Character }) {
       ]);
       setTyping(false);
       setCursor(nextAi + 1);
+
+      // Funnel: nach der letzten AI-Message automatisch blur + CTA triggern
+      const nextRole = normalizeRole(script[nextAi + 1]?.role ?? "");
+      if (nextRole === "blur") {
+        blurTimerRef.current = window.setTimeout(() => {
+          setBlurred(true);
+        }, 1500);
+      }
     }, 1000);
   }
 
@@ -248,9 +268,19 @@ export default function ChatClient({ character }: { character: Character }) {
 
           {/* Blur + CTA */}
           {blurred && (
-            <div className="absolute inset-0 z-30 flex items-end">
+            <div className="absolute inset-0 z-30 flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
-              <div className="relative w-full p-4 pb-6">
+              <div className="relative w-full max-w-[360px] rounded-3xl border border-zinc-800 bg-zinc-950/80 backdrop-blur-md p-6 shadow-2xl">
+                <div className="text-center">
+                  <div className="text-3xl mb-3">🔒</div>
+                  <div className="text-xl font-black text-white mb-2">
+                    Continue the conversation...
+                  </div>
+                  <div className="text-sm text-zinc-400 mb-5">
+                    Unlock the full chat with {character.name}.
+                  </div>
+                </div>
+
                 <a
                   href={character.affiliateUrl}
                   target="_blank"
@@ -259,8 +289,10 @@ export default function ChatClient({ character }: { character: Character }) {
                 >
                   {character.affiliateLabel}
                 </a>
-                <p className="text-center text-zinc-400 text-xs mt-3">
-                  This is a preview. Continue on {character.affiliatePlatform} →
+
+                <p className="text-center text-zinc-400 text-xs mt-4">
+                  This is a preview. Meet {character.name} on{" "}
+                  {character.affiliatePlatform} →
                 </p>
               </div>
             </div>
