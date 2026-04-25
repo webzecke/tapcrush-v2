@@ -6,10 +6,10 @@ export default function CharacterCard({ character }: { character: Character }) {
     character;
 
   return (
-    <Link href={`/character/${slug}`} className="group block">
+    <Link href={`/feed/${slug}`} className="group block">
       <div className="relative rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 transition-all duration-300 group-hover:border-pink-500/50 group-hover:shadow-[0_0_24px_rgba(236,72,153,0.15)]">
         {/* Portrait */}
-        <div className="aspect-[3/4] relative overflow-hidden bg-zinc-800">
+        <div className="aspect-3/4 relative overflow-hidden bg-zinc-800">
           {portraitUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -38,7 +38,7 @@ export default function CharacterCard({ character }: { character: Character }) {
           </div>
 
           {/* Bottom gradient */}
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-900 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-zinc-900 to-transparent" />
         </div>
 
         {/* Info */}
