@@ -1,0 +1,59 @@
+# Tapcrush v2 – Cursor Rules
+
+## Projektidentität
+Dies ist TAPCRUSH v2 – NICHT Tapcams.
+Tapcams ist ein separates Projekt (Livecams). Tapcrush ist AI Companions.
+Niemals Tapcams-spezifischen Code (Stripchat, LiveMedia, fetchModelFeedItems) in dieses Projekt einbringen.
+
+## Tech Stack
+- Next.js 15, App Router, TypeScript strict
+- Tailwind CSS (keine anderen CSS Frameworks)
+- Neon Postgres + Drizzle ORM (lib/db.ts + lib/schema.ts)
+- fal.ai FLUX.1 für Bildgenerierung
+- Vercel Hosting
+
+## Projektstruktur
+app/
+  page.tsx              → Index (Character Grid)
+  feed/[slug]/          → Snap-Scroll Feed
+  character/[slug]/     → Profil Page
+  chat/[slug]/          → Fake Chat Funnel
+components/
+  FeedClient.tsx        → Client Component, Snap-Scroll Logik
+  ChatClient.tsx        → Client Component, Chat Funnel Logik
+  CharacterCard.tsx     → Wiederverwendbare Card
+lib/
+  db.ts                 → Neon + Drizzle Client
+  schema.ts             → characters Tabelle
+scripts/
+  seed.ts               → DB Seed
+  generate-images.ts    → fal.ai Bildgenerierung
+  check-chat.ts         → DB Debug
+
+## Konventionen
+- Server Components by default, "use client" nur wenn nötig
+- Alle DB-Queries via Drizzle, kein raw SQL
+- Affiliate URLs immer mit UTM: ?utm_source=tapcrush&utm_medium=char&utm_campaign=[char-id]
+- Bilder: /public/chars/[id]/portrait.webp
+- Slugs: lowercase, kebab-case, beschreibend (z.B. "luna-shy-romantic-deutsch")
+- Kein console.log in Production Code
+
+## Design System
+- Background: bg-black oder bg-zinc-950
+- Akzentfarben: Pink (#ec4899) + Purple (#a855f7)
+- Text: white / zinc-400 für sekundär
+- Cards: bg-zinc-900, rounded-2xl
+- CTA Buttons: pink-to-purple Gradient
+- Keine hellen Themes, kein buntes UI
+
+## Wichtige Regeln
+- MVP first – kein Feature das nicht Conversion oder SEO dient
+- Niemals Drizzle Schema ohne explizite Anweisung ändern
+- Niemals .env.local anfassen
+- Nach jedem Fix: npm run build prüfen
+- Git commit messages auf Englisch, präzise
+
+## Live URLs
+- Production: https://tapcrush-v2.vercel.app
+- Repo: https://github.com/webzecke/tapcrush-v2
+- Neon DB: via DATABASE_URL in .env.local
