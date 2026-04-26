@@ -5,9 +5,17 @@ import "./globals.css";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tapcrush – Your AI Crush, One Tap Away",
+  metadataBase: new URL("https://tapcrush.app"),
+  title: {
+    default: "Tapcrush – Your AI Crush, One Tap Away",
+    template: "%s | Tapcrush",
+  },
   description:
-    "Discover your perfect AI companion. Sexy, smart, and always available.",
+    "Discover AI companions that actually listen. Romantic, playful, deep, or bold – one tap away.",
+  openGraph: {
+    siteName: "Tapcrush",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
