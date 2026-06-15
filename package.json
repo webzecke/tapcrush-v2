@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-content": "tsx scripts/generate-content.ts",
+    "generate-images": "tsx scripts/generate-images.ts"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.0",
@@ -15,7 +17,8 @@
     "drizzle-orm": "^0.45.2",
     "next": "15.5.15",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
